@@ -1,0 +1,58 @@
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, Optional
+
+import jwt
+from passlib.context import CryptContext
+from app.config.settings import settings
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    """Hashes a raw password string using bcrypt."""
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies a plain password against its hashed value."""
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def create_access_token(subject: str | Any, expires_delta: Optional[timedelta] = None) -> str:
+    """Generates a signed JWT access token."""
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    to_encode = {
+        "sub": str(subject),
+        "exp": expire,
+        "type": "access",
+        "iat": datetime.now(timezone.utc)
+    }
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+def create_refresh_token(subject: str | Any, expires_delta: Optional[timedelta] = None) -> str:
+    """Generates a signed JWT refresh token with unique jti claim."""
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    to_encode = {
+        "sub": str(subject),
+        "exp": expire,
+        "type": "refresh",
+        "jti": str(uuid.uuid4()),
+        "iat": datetime.now(timezone.utc)
+    }
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+
+
+def decode_token(token: str) -> Dict[str, Any]:
+    """Decodes and validates a JWT token. Raises PyJWT exceptions on failure."""
+    return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
