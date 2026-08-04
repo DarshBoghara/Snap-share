@@ -83,8 +83,15 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
 
         stored_token = await self.token_repo.get_by_token(token_str)
-        if not stored_token or stored_token.expires_at < datetime.now(timezone.utc):
+        if not stored_token:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked or expired")
+
+        token_exp = stored_token.expires_at
+        if token_exp.tzinfo is None:
+            token_exp = token_exp.replace(tzinfo=timezone.utc)
+
+        if token_exp < datetime.now(timezone.utc):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
 
         # Revoke old token and issue new pair
         await self.token_repo.revoke_token(token_str)
