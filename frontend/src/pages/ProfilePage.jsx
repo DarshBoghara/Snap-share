@@ -94,6 +94,7 @@ export const ProfilePage = () => {
               value={profileImage}
               onChange={(e) => setProfileImage(e.target.value)}
             />
+            
 
             <Button type="submit" variant="primary" size="lg" isLoading={loading}>
               Save Profile Changes
