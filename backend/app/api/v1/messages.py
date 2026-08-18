@@ -1,6 +1,6 @@
 import uuid
-from typing import Dict, List
-from fastapi import APIRouter, Depends, status
+from typing import Dict, List, Optional
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.dependencies.auth import get_current_user
 from app.database.session import get_db
@@ -24,11 +24,13 @@ async def send_message(
 @router.get("/conversation/{other_user_id}", response_model=List[MessageResponse])
 async def get_conversation(
     other_user_id: uuid.UUID,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     service = MessageService(db)
-    return await service.get_active_messages(current_user.id, other_user_id)
+    return await service.get_active_messages(current_user.id, other_user_id, limit=limit, offset=offset)
 
 
 @router.get("/unread-counts", response_model=Dict[str, int])
@@ -50,5 +52,7 @@ async def mark_read_and_disappear(
     HTTP Fallback / Direct endpoint to trigger message read & instant deletion.
     """
     service = MessageService(db)
-    res = await service.mark_seen_and_delete(message_id)
+    res = await service.mark_seen_and_delete(message_id, current_user.id)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found or unauthorized")
     return res

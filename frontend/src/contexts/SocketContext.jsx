@@ -10,6 +10,7 @@ export const SocketProvider = ({ children }) => {
   const listenersRef = useRef(new Map());
   const heartbeatIntervalRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const reconnectDelayRef = useRef(1000);
 
   const connectSocket = () => {
     const token = localStorage.getItem('access_token');
@@ -24,7 +25,7 @@ export const SocketProvider = ({ children }) => {
 
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = window.location.port === '5173' ? `${window.location.hostname}:8000` : window.location.host;
-    const wsUrl = `${wsProtocol}//${wsHost}/api/v1/ws?token=${encodeURIComponent(token)}`;
+    const wsUrl = import.meta.env.VITE_WS_URL || `${wsProtocol}//${wsHost}/api/v1/ws?token=${encodeURIComponent(token)}`;
 
     try {
       if (socketRef.current) {
@@ -36,6 +37,7 @@ export const SocketProvider = ({ children }) => {
 
       ws.onopen = () => {
         setIsConnected(true);
+        reconnectDelayRef.current = 1000;
 
         if (heartbeatIntervalRef.current) clearInterval(heartbeatIntervalRef.current);
         heartbeatIntervalRef.current = setInterval(() => {
@@ -67,9 +69,11 @@ export const SocketProvider = ({ children }) => {
 
         const currentToken = localStorage.getItem('access_token');
         if (user && currentToken) {
+          const nextDelay = reconnectDelayRef.current;
+          reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000);
           reconnectTimeoutRef.current = setTimeout(() => {
             connectSocket();
-          }, 3000);
+          }, nextDelay);
         }
       };
 

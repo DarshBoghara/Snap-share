@@ -66,7 +66,7 @@ export const ChatPage = () => {
       const counts = await messageService.getUnreadCounts();
       setUnreadCounts(counts);
 
-      const recentUsers = await userService.searchUsers('a');
+      const recentUsers = await userService.searchUsers('');
       setUsers(recentUsers);
     } catch (e) {
       console.error('Failed to load initial chat data:', e);
@@ -90,7 +90,7 @@ export const ChatPage = () => {
   const handleSearch = async (query) => {
     try {
       if (!query.trim()) {
-        const defaultUsers = await userService.searchUsers('a');
+        const defaultUsers = await userService.searchUsers('');
         setUsers(defaultUsers);
         return;
       }

@@ -2,14 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+:root, html.dark {
+  --background: #0f172a;
+  --secondary-bg: #1e293b;
+  --sidebar-bg: #020617;
+  --card-bg: #0f172a;
+  --primary-text: #f8fafc;
+  --secondary-text: #94a3b8;
+  --muted-text: #64748b;
+  --border-color: #1e293b;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #f43f5e;
+  --unread-badge: #2563eb;
+  --selected-chat: #1e293b;
+  --own-bubble-bg: #2563eb;
+  --own-bubble-text: #ffffff;
+  --other-bubble-bg: #1e293b;
+  --other-bubble-text: #f8fafc;
+  --input-bg: #0f172a;
+  --search-bg: #0f172a;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+html.light {
+  --background: #f8fafc;
+  --secondary-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --card-bg: #ffffff;
+  --primary-text: #0f172a;
+  --secondary-text: #475569;
+  --muted-text: #94a3b8;
+  --border-color: #e2e8f0;
+  --accent-color: #2563eb;
+  --accent-hover: #1d4ed8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --unread-badge: #2563eb;
+  --selected-chat: #f1f5f9;
+  --own-bubble-bg: #2563eb;
+  --own-bubble-text: #ffffff;
+  --other-bubble-bg: #f1f5f9;
+  --other-bubble-text: #0f172a;
+  --input-bg: #f1f5f9;
+  --search-bg: #f1f5f9;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+}
+
 @layer base {
   body {
-    @apply bg-slate-900 text-slate-100 font-sans antialiased overflow-x-hidden transition-colors duration-200;
+    background-color: var(--background);
+    color: var(--primary-text);
+    @apply font-sans antialiased overflow-x-hidden transition-colors duration-200;
   }
+}
 
-  html.light body {
-    @apply bg-slate-50 text-slate-900;
-  }
+.glass-panel {
+  background: var(--secondary-bg);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
 }
 
 /* Custom Scrollbar */

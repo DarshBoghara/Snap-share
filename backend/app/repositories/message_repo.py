@@ -39,25 +39,26 @@ class MessageRepository:
         await self.db.commit()
         return result.scalar_one_or_none()
 
-    async def mark_seen_and_delete_immediately(self, message_id: uuid.UUID) -> Message | None:
+    async def mark_seen_and_delete_immediately(
+        self, message_id: uuid.UUID, receiver_id: uuid.UUID
+    ) -> Message | None:
         """
-        Core Snapchat Disappearing Engine logic:
-        1. Query target message.
-        2. If exists, immediately execute DELETE statement from DB.
-        3. Return message metadata so WebSocket server can broadcast the deletion event to both users.
+        Atomic & Idempotent Disappearing Engine:
+        1. Execute single atomic DELETE statement matching message_id and receiver_id.
+        2. Uses returning() to guarantee single-transaction execution across concurrent tasks.
+        3. Return message metadata so WebSocket server can broadcast deletion event to both users.
         """
-        msg = await self.get_by_id(message_id)
-        if not msg:
-            return None
-        
-        # Immediate permanent purge from Database
-        stmt = delete(Message).where(Message.id == message_id)
-        await self.db.execute(stmt)
+        stmt = (
+            delete(Message)
+            .where(Message.id == message_id, Message.receiver_id == receiver_id)
+            .returning(Message)
+        )
+        result = await self.db.execute(stmt)
         await self.db.commit()
-        return msg
+        return result.scalar_one_or_none()
 
     async def get_active_conversation_messages(
-        self, user_a_id: uuid.UUID, user_b_id: uuid.UUID
+        self, user_a_id: uuid.UUID, user_b_id: uuid.UUID, limit: int = 50, offset: int = 0
     ) -> Sequence[Message]:
         """
         Retrieves active pending (unseen) messages between two users.
@@ -72,6 +73,8 @@ class MessageRepository:
                 )
             )
             .order_by(Message.created_at.asc())
+            .offset(offset)
+            .limit(limit)
         )
         result = await self.db.execute(stmt)
         return result.scalars().all()

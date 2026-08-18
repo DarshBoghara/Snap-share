@@ -29,18 +29,20 @@ class MessageService:
         )
         return MessageResponse.model_validate(msg)
 
-    async def mark_seen_and_delete(self, message_id: uuid.UUID) -> MessageResponse | None:
+    async def mark_seen_and_delete(self, message_id: uuid.UUID, receiver_id: uuid.UUID) -> MessageResponse | None:
         """
         Disappearing message core action:
-        Changes status to SEEN and instantly deletes message from DB.
+        Verifies receiver authorization and instantly deletes message from DB.
         """
-        msg = await self.message_repo.mark_seen_and_delete_immediately(message_id)
+        msg = await self.message_repo.mark_seen_and_delete_immediately(message_id, receiver_id)
         if not msg:
             return None
         return MessageResponse.model_validate(msg)
 
-    async def get_active_messages(self, user_a_id: uuid.UUID, user_b_id: uuid.UUID) -> Sequence[MessageResponse]:
-        messages = await self.message_repo.get_active_conversation_messages(user_a_id, user_b_id)
+    async def get_active_messages(
+        self, user_a_id: uuid.UUID, user_b_id: uuid.UUID, limit: int = 50, offset: int = 0
+    ) -> Sequence[MessageResponse]:
+        messages = await self.message_repo.get_active_conversation_messages(user_a_id, user_b_id, limit=limit, offset=offset)
         return [MessageResponse.model_validate(m) for m in messages]
 
     async def get_unread_counts(self, user_id: uuid.UUID) -> dict[str, int]:

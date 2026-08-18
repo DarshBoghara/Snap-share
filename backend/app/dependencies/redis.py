@@ -40,14 +40,30 @@ class MockRedis:
         pass
 
 
+_redis_pool: redis.ConnectionPool | None = None
+_mock_redis_instance: MockRedis | None = None
+
+
+def get_redis_pool() -> redis.ConnectionPool:
+    global _redis_pool
+    if _redis_pool is None:
+        _redis_pool = redis.ConnectionPool.from_url(
+            settings.get_redis_url(),
+            decode_responses=True,
+            max_connections=50
+        )
+    return _redis_pool
+
+
 async def get_redis() -> AsyncGenerator[redis.Redis | MockRedis, None]:
+    global _mock_redis_instance
     try:
-        pool = redis.ConnectionPool.from_url(settings.get_redis_url(), decode_responses=True)
+        pool = get_redis_pool()
         client = redis.Redis(connection_pool=pool)
-        # Test connection ping
         await client.ping()
         yield client
-        await client.aclose()
     except Exception as e:
-        logger.info(f"Using MockRedis fallback for local presence state: {e}")
-        yield MockRedis()
+        logger.debug(f"Using MockRedis fallback for local presence state: {e}")
+        if _mock_redis_instance is None:
+            _mock_redis_instance = MockRedis()
+        yield _mock_redis_instance

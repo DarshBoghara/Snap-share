@@ -38,6 +38,13 @@ async def websocket_endpoint(
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
+    # Connection limit check
+    MAX_CONNECTIONS_PER_USER = 10
+    if len(manager.active_connections.get(user_id, set())) >= MAX_CONNECTIONS_PER_USER:
+        logger.warning(f"User {user_id} exceeded max concurrent WebSocket connections limit.")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     # Connection accepted
     socket_id = str(uuid.uuid4())
     await manager.connect(user_id, websocket)

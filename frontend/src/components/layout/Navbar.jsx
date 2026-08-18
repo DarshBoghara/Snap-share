@@ -24,7 +24,7 @@ export const Navbar = () => {
           <MessageSquare className="w-4 h-4 text-white" />
         </div>
         <h1 className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          SnapChat <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-500/30">Ephemeral</span>
+          SNAP<span className="text-blue-600 dark:text-blue-400">SHARE</span>
         </h1>
       </Link>
 

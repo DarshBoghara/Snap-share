@@ -39,16 +39,24 @@ class UserRepository:
         await self.db.refresh(user)
         return user
 
-    async def search_users(self, query: str, current_user_id: uuid.UUID, limit: int = 20) -> Sequence[User]:
-        pattern = f"%{query}%"
-        stmt = (
-            select(User)
-            .where(
-                User.id != current_user_id,
-                or_(User.username.ilike(pattern), User.email.ilike(pattern))
+    async def search_users(self, query: str = "", current_user_id: uuid.UUID = None, limit: int = 20) -> Sequence[User]:
+        if query and query.strip():
+            pattern = f"%{query.strip()}%"
+            stmt = (
+                select(User)
+                .where(
+                    User.id != current_user_id,
+                    or_(User.username.ilike(pattern), User.email.ilike(pattern))
+                )
+                .limit(limit)
             )
-            .limit(limit)
-        )
+        else:
+            stmt = (
+                select(User)
+                .where(User.id != current_user_id)
+                .order_by(User.updated_at.desc())
+                .limit(limit)
+            )
         result = await self.db.execute(stmt)
         return result.scalars().all()
 

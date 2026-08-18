@@ -8,15 +8,22 @@ from app.database.base import Base
 from app.database.session import get_db
 from app.main import app
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+import os
+TEST_DATABASE_URL = "sqlite+aiosqlite:///./test_snapchat.db"
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
     async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
     yield engine
     await engine.dispose()
+    if os.path.exists("./test_snapchat.db"):
+        try:
+            os.remove("./test_snapchat.db")
+        except Exception:
+            pass
 
 @pytest_asyncio.fixture
 async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:

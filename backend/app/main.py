@@ -49,6 +49,16 @@ setup_cors(app)
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
+@app.get("/", tags=["Root"])
+async def root():
+    return {
+        "status": "online",
+        "service": settings.PROJECT_NAME,
+        "docs": "/docs",
+        "health": f"{settings.API_V1_STR}/health"
+    }
+
+
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {"status": "ok", "service": settings.PROJECT_NAME}

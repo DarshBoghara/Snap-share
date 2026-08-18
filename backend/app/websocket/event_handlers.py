@@ -65,7 +65,7 @@ async def handle_ws_message(
                 target_ids = [uuid.UUID(event.data["message_id"])]
 
             for msg_id in target_ids:
-                deleted_msg = await message_service.mark_seen_and_delete(msg_id)
+                deleted_msg = await message_service.mark_seen_and_delete(msg_id, sender_id)
                 if deleted_msg:
                     payload = {
                         "event": WSEventType.MESSAGE_DELETED.value,
